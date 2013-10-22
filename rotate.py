@@ -38,24 +38,18 @@ class Character(object):
         self.original_image = image
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect(center=location)
-        try:
-            self._origin = list(getattr(self.rect,origin))
-        except TypeError:
-            self._origin = list(origin)
-        self.rotator = Rotator(self.rect.center,self.origin)
         self.angle = 0
+        try:
+            self.set_origin(getattr(self.rect,origin))
+        except TypeError:
+            self.set_origin(origin)
         self.speed = 3
         self.speed_ang = 1
         self.player_control = False
 
-    @property
-    def origin(self):
-        return self._origin
-    @origin.setter
-    def origin(self,new_origin):
-        offset = [new_origin[0]-self._origin[0],new_origin[1]-self._origin[1]]
-        self.rect.move_ip(offset)
-        self._origin = list(new_origin)
+    def set_origin(self,point):
+        self.origin = list(point)
+        self.rotator = Rotator(self.rect.center,point,self.angle)
 
     def rotate(self,surface):
         if self.speed_ang:
@@ -70,22 +64,18 @@ class Character(object):
             pg.draw.circle(surface,(255,0,255),self.origin,4)
 
     def move(self,keys):
-        position = self.origin[:]
         for key in DIRECT_DICT:
             if keys[key]:
-                position[0] += DIRECT_DICT[key][0]*self.speed
-                position[1] += DIRECT_DICT[key][1]*self.speed
-        self.origin = position
+                for i in (0,1):
+                    change = DIRECT_DICT[key][i]*self.speed
+                    self.origin[i] += change
+                    self.rect[i] += change
 
     def update(self,surface,keys):
         if self.player_control:
             self.move(keys)
         self.rotate(surface)
         self.draw(surface,draw_origin=True)
-
-    def set_new_origin(self,new_origin):
-        self.rotator = Rotator(self.rect.center,new_origin,self.angle)
-        self._origin = list(new_origin)
 
 
 class Control(object):
@@ -106,7 +96,7 @@ class Control(object):
                 self.done = True
             elif event.type == pg.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    self.actor.set_new_origin(event.pos)
+                    self.actor.set_origin(event.pos)
             elif event.type == pg.KEYDOWN:
                 if event.key in (pg.K_EQUALS,pg.K_KP_PLUS):
                     self.actor.speed_ang += 1
