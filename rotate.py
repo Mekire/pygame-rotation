@@ -51,7 +51,7 @@ class Character(object):
         self.origin = list(point)
         self.rotator = Rotator(self.rect.center,point,self.angle)
 
-    def rotate(self,surface):
+    def rotate(self):
         if self.speed_ang:
             self.angle = (self.angle+self.speed_ang)%360
             new_center = self.rotator(self.angle,self.origin)
@@ -74,7 +74,7 @@ class Character(object):
     def update(self,surface,keys):
         if self.player_control:
             self.move(keys)
-        self.rotate(surface)
+        self.rotate()
         self.draw(surface,draw_origin=True)
 
 
